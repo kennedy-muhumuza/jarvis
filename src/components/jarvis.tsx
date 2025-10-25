@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 
-function App() {
+export default function Jarvis() {
   const [connected, setConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -65,5 +65,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
