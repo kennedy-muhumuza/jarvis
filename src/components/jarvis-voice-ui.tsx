@@ -8,13 +8,6 @@ export default function JarvisVoiceUI({ onWake }: any) {
   const [transcript, setTranscript] = useState("");
 
   useEffect(() => {
-    // const SpeechRecognition =
-    //   window.SpeechRecognition || window.webkitSpeechRecognition;
-    // if (!SpeechRecognition) {
-    //   alert("Speech recognition not supported in this browser.");
-    //   return;
-    // }
-
     const SpeechRecognition =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
@@ -31,7 +24,7 @@ export default function JarvisVoiceUI({ onWake }: any) {
       const result =
         event.results[event.results.length - 1][0].transcript.toLowerCase();
       setTranscript(result);
-      if (result.includes("jarvis")) {
+      if (result.includes("hey")) {
         setIsActive(true);
         onWake?.();
         setTimeout(() => setIsActive(false), 2500);
@@ -116,117 +109,3 @@ export default function JarvisVoiceUI({ onWake }: any) {
     </div>
   );
 }
-
-// // JarvisVoiceUI.tsx
-// import { useEffect, useState } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
-// import { Mic, MicOff } from "lucide-react";
-
-// type Props = {
-//   onWake?: () => void;
-// };
-
-// export default function JarvisVoiceUI({ onWake }: Props) {
-//   const [isListening, setIsListening] = useState(false);
-//   const [isActive, setIsActive] = useState(false);
-//   const [transcript, setTranscript] = useState("");
-
-//   useEffect(() => {
-//     const SpeechRecognition =
-//       (window as any).SpeechRecognition ||
-//       (window as any).webkitSpeechRecognition;
-//     if (!SpeechRecognition) {
-//       return;
-//     }
-//     const recognition = new SpeechRecognition();
-//     recognition.continuous = true;
-//     recognition.interimResults = false;
-//     recognition.lang = "en-US";
-
-//     // recognition.onresult = (event: SpeechRecognitionEvent) => {
-//     recognition.onresult = (event: any) => {
-//       const result =
-//         event.results[event.results.length - 1][0].transcript.toLowerCase();
-//       setTranscript(result);
-//       if (result.includes("jarvis")) {
-//         setIsActive(true);
-//         onWake?.();
-//         setTimeout(() => setIsActive(false), 2500);
-//       }
-//     };
-
-//     recognition.onend = () => {
-//       if (isListening) recognition.start();
-//     };
-
-//     if (isListening) recognition.start();
-
-//     return () => {
-//       try {
-//         recognition.stop();
-//       } catch (e) {}
-//     };
-//   }, [isListening, onWake]);
-
-//   return (
-//     <div className="w-full max-w-md mx-auto text-center">
-//       <div className="relative my-8">
-//         <AnimatePresence>
-//           {isActive && (
-//             <motion.div
-//               key="pulse"
-//               initial={{ scale: 0.9, opacity: 0.3 }}
-//               animate={{ scale: [1, 1.35, 1], opacity: [0.6, 1, 0.6] }}
-//               transition={{
-//                 duration: 1.6,
-//                 repeat: Infinity,
-//                 ease: "easeInOut",
-//               }}
-//               className="absolute -inset-6 rounded-full bg-blue-500/30 blur-2xl"
-//             />
-//           )}
-//         </AnimatePresence>
-
-//         <motion.div
-//           animate={{ scale: isActive ? 1.05 : 1 }}
-//           transition={{ type: "spring", stiffness: 280, damping: 18 }}
-//           className={`relative z-10 flex items-center justify-center w-28 h-28 rounded-full shadow-2xl border-2 ${
-//             isActive
-//               ? "border-blue-400 bg-blue-700/20"
-//               : "border-gray-700 bg-gray-800/20"
-//           }`}
-//         >
-//           {isListening ? (
-//             <Mic
-//               className={`w-10 h-10 ${
-//                 isActive ? "text-blue-400" : "text-gray-300"
-//               }`}
-//             />
-//           ) : (
-//             <MicOff className="w-10 h-10 text-gray-500" />
-//           )}
-//         </motion.div>
-//       </div>
-
-//       <p className="text-gray-300">
-//         {isListening
-//           ? isActive
-//             ? "Jarvis is awake..."
-//             : "Listening for 'Hey Jarvis'..."
-//           : "Mic is off"}
-//       </p>
-//       {transcript && (
-//         <p className="text-sm text-gray-500 italic mt-2">{transcript}</p>
-//       )}
-
-//       <div className="mt-6">
-//         <button
-//           onClick={() => setIsListening((p) => !p)}
-//           className="px-6 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow"
-//         >
-//           {isListening ? "Stop Listening" : "Start Listening"}
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }

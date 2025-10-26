@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import JarvisVoiceUI from "./components/jarvis-voice-ui";
 import Waveform from "./components/waveform";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Message = {
   id: string;
@@ -79,7 +80,6 @@ function App() {
         // not json — fallback to plain text message
       }
 
-      // Plain text messages
       const text = (event.data as string).trim();
       if (!text) return;
       setMessages((prev) => [
@@ -121,7 +121,6 @@ function App() {
     }
   };
 
-  // wire Wake -> send greet
   const handleWake = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "chat", text: "__greet__" }));
@@ -145,52 +144,56 @@ function App() {
           </header>
 
           <div className="bg-gray-900/30 rounded-xl p-4 shadow-lg">
-            {/* Chat area */}
-            <div className="h-96 overflow-y-auto p-3 space-y-3">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`max-w-[80%] ${
-                    m.sender === "user"
-                      ? "ml-auto text-right"
-                      : "mr-auto text-left"
-                  }`}
-                >
-                  <div
-                    className={`${
+            <div className="h-66 overflow-y-auto p-3 space-y-3">
+              <AnimatePresence>
+                {messages.map((m) => (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.25 }}
+                    className={`max-w-[80%] ${
                       m.sender === "user"
-                        ? "bg-blue-600/80 text-white"
-                        : "bg-gray-800/80 text-gray-100"
-                    } inline-block px-4 py-2 rounded-2xl`}
+                        ? "ml-auto text-right"
+                        : "mr-auto text-left"
+                    }`}
                   >
-                    {m.text && (
-                      <div className="whitespace-pre-wrap">{m.text}</div>
-                    )}
-                    {m.audioUrl && (
-                      <>
-                        <div className="mt-2">
+                    <div
+                      className={`relative inline-block px-4 py-2 rounded-2xl shadow-md backdrop-blur-sm ${
+                        m.sender === "user"
+                          ? "bg-blue-600/70 text-white"
+                          : "bg-gray-800/70 text-gray-100"
+                      }`}
+                    >
+                      {m.text && (
+                        <div className="whitespace-pre-wrap text-[15px] leading-snug">
+                          {m.text}
+                        </div>
+                      )}
+
+                      {m.audioUrl && (
+                        <div className="mt-2 flex justify-end">
                           <button
                             onClick={() => playAudio(m.audioUrl!)}
-                            className="px-3 py-1 rounded-full bg-blue-500/70 hover:bg-blue-600"
+                            className="px-3 py-1 text-sm rounded-full bg-blue-500/70 hover:bg-blue-600 transition"
                           >
                             ▶️ Play
                           </button>
                         </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
 
-            {/* Waveform shown only when audio is playing */}
             <div className="mt-3">
               <div className="bg-black/20 rounded p-3">
                 <Waveform audioRef={audioRef} playing={playing} />
               </div>
             </div>
 
-            {/* Input area */}
             <div className="mt-4 flex gap-2 items-center">
               <input
                 type="text"
@@ -217,7 +220,6 @@ function App() {
               </button>
             </div>
 
-            {/* Jarvis Voice UI */}
             <div className="mt-6">
               <JarvisVoiceUI onWake={handleWake} />
             </div>
@@ -240,134 +242,3 @@ function App() {
 }
 
 export default App;
-
-// import { useEffect, useState, useRef } from "react";
-// import Jarvis from "./components/jarvis";
-// import JarvisListener from "./components/jarvis-listener";
-
-// function App() {
-//   const [connected, setConnected] = useState(false);
-//   const [conversation, setConversation] = useState<string[]>([]);
-//   const [inputText, setInputText] = useState("");
-//   const wsRef = useRef<WebSocket | null>(null);
-
-//   // Connect to backend WebSocket
-//   useEffect(() => {
-//     const ws = new WebSocket("ws://localhost:5000/ws");
-//     wsRef.current = ws;
-
-//     ws.onopen = () => {
-//       console.log("✅ Connected to backend");
-//       setConnected(true);
-
-//       setTimeout(() => {
-//         ws.send(JSON.stringify({ type: "chat", text: "__greet__" }));
-//       }, 1500);
-//     };
-
-//     // ws.onmessage = (event) => {
-//     //   const msg = event.data;
-//     //   setConversation((prev) => [...prev, `🤖 Jarvis: ${msg}`]);
-//     // };
-
-//     ws.onmessage = (event) => {
-//       const msg = event.data;
-
-//       try {
-//         const data = JSON.parse(msg);
-//         if (data.type === "tts_result") {
-//           const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
-//           audio.play();
-//           return;
-//         }
-//       } catch (err) {
-//         // Normal text message
-//         setConversation((prev) => [...prev, `🤖 Jarvis: ${msg}`]);
-//       }
-//     };
-
-//     ws.onclose = () => {
-//       console.log("❌ Disconnected");
-//       setConnected(false);
-//     };
-
-//     return () => ws.close();
-//   }, []);
-
-//   const sendMessage = () => {
-//     if (wsRef.current && inputText.trim()) {
-//       const msg = {
-//         type: "chat",
-//         text: inputText,
-//       };
-//       wsRef.current.send(JSON.stringify(msg));
-//       // wsRef.current.send(inputText);
-//       setConversation((prev) => [...prev, `🧑 You: ${inputText}`]);
-//       setInputText("");
-//     }
-//   };
-
-//   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-//     if (e.key === "Enter") sendMessage();
-//   };
-
-//   return (
-//     <div
-//       style={{
-//         fontFamily: "sans-serif",
-//         padding: "2rem",
-//         maxWidth: 600,
-//         margin: "auto",
-//       }}
-//     >
-//       <h1>🎙️ Jarvis Live Chat</h1>
-//       <p>Status: {connected ? "🟢 Connected" : "🔴 Disconnected"}</p>
-
-//       <div
-//         style={{
-//           border: "1px solid #ccc",
-//           borderRadius: "10px",
-//           padding: "1rem",
-//           height: "300px",
-//           overflowY: "auto",
-//           marginBottom: "1rem",
-//           background: "#fafafa",
-//           color: "#000",
-//         }}
-//       >
-//         {conversation.map((msg, i) => (
-//           <p key={i} style={{ margin: "0.5rem 0" }}>
-//             {msg}
-//           </p>
-//         ))}
-//       </div>
-
-//       <input
-//         type="text"
-//         placeholder="Type your message..."
-//         value={inputText}
-//         onChange={(e) => setInputText(e.target.value)}
-//         onKeyDown={handleKeyDown}
-//         style={{ padding: "0.5rem", width: "80%" }}
-//       />
-//       <button
-//         onClick={sendMessage}
-//         style={{ padding: "0.5rem", marginLeft: "0.5rem" }}
-//       >
-//         Send
-//       </button>
-//       <JarvisListener
-//         onWakeWord={() => {
-//           console.log("🎙️ Jarvis activated!");
-//           wsRef.current?.send(
-//             JSON.stringify({ type: "chat", text: "__greet__" })
-//           );
-//         }}
-//       />
-
-//       {/* <Jarvis /> */}
-//     </div>
-//   );
-// }
-
-// export default App;
